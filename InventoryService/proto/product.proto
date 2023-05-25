@@ -9,6 +9,7 @@ service ProductService {
 message CreateProductRequest {
     string name = 1;
     double price = 2;
+    int32 quanity = 3;
 }
 
 message CreateProductResponse {

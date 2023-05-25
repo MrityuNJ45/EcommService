@@ -23,6 +23,7 @@ func main() {
 	request := &pb.CreateProductRequest{
 		Name : "Pen",
 		Price : 20,
+		Quanity: 30,
 	}
 
 	response, err := client.CreateProduct(context.Background(), request)

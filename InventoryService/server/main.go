@@ -2,7 +2,12 @@ package main
 
 import (
 	"context"
+	pr "ecommerceApp/inventoryService/models"
+
+	
 	pb "ecommerceApp/inventoryService/proto/product"
+	srv "ecommerceApp/inventoryService/service"
+	repo "ecommerceApp/inventoryService/repository"
 	"fmt"
 	"log"
 	"net"
@@ -12,13 +17,23 @@ import (
 
 type myGrpcServer struct {
 	pb.UnimplementedProductServiceServer
+	
 }
 
 func (m *myGrpcServer) CreateProduct(ctx context.Context, req *pb.CreateProductRequest) (*pb.CreateProductResponse, error) {
 
+	db, _ := repo.SetupDB()
+	productService := srv.NewProductService(db);
+	product := pr.Product{
+		Name:  req.Name,
+		Price: req.Price,
+		Quantity: int(req.Quanity),
+	}
+
+	id := productService.CreateProduct(product)
 	fmt.Println("Product Received name : " + req.Name)
 	return &pb.CreateProductResponse{
-		Id: 1,
+		Id: id,
 	}, nil
 
 }
