@@ -1,42 +1,24 @@
 package main
 
 import (
-	"context"
-	pr "ecommerceApp/inventoryService/models"
-
 	
+	
+
 	pb "ecommerceApp/inventoryService/proto/product"
-	srv "ecommerceApp/inventoryService/service"
 	repo "ecommerceApp/inventoryService/repository"
+	srv "ecommerceApp/inventoryService/service"
+
 	"fmt"
 	"log"
 	"net"
 
 	"google.golang.org/grpc"
+	
 )
 
-type myGrpcServer struct {
-	pb.UnimplementedProductServiceServer
-	
-}
 
-func (m *myGrpcServer) CreateProduct(ctx context.Context, req *pb.CreateProductRequest) (*pb.CreateProductResponse, error) {
 
-	db, _ := repo.SetupDB()
-	productService := srv.NewProductService(db);
-	product := pr.Product{
-		Name:  req.Name,
-		Price: req.Price,
-		Quantity: int(req.Quanity),
-	}
 
-	id := productService.CreateProduct(product)
-	fmt.Println("Product Received name : " + req.Name)
-	return &pb.CreateProductResponse{
-		Id: id,
-	}, nil
-
-}
 
 func main() {
 
@@ -48,9 +30,14 @@ func main() {
 		return
 	}
 
+	db := &repo.Database{};
+	db.Connect();
+	
+    myGrpcServer := srv.NewProductService(db.DB)
+
 	grpcServer := grpc.NewServer()
 
-	pb.RegisterProductServiceServer(grpcServer, &myGrpcServer{})
+	pb.RegisterProductServiceServer(grpcServer, myGrpcServer)
 
 	err = grpcServer.Serve(lis)
 	if err != nil {

@@ -21,9 +21,9 @@ func main() {
 	client := pb.NewProductServiceClient(conn)
 
 	request := &pb.CreateProductRequest{
-		Name : "Pen",
+		Name : "sharpner",
 		Price : 20,
-		Quanity: 30,
+		Quantity: 30,
 	}
 
 	response, err := client.CreateProduct(context.Background(), request)
