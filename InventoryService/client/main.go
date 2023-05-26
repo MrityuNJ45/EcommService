@@ -20,13 +20,11 @@ func main() {
 	defer conn.Close()
 	client := pb.NewProductServiceClient(conn)
 
-	request := &pb.CreateProductRequest{
-		Name : "sharpner",
-		Price : 20,
-		Quantity: 30,
+	request := &pb.GetProductRequest{
+		Id: 1,
 	}
 
-	response, err := client.CreateProduct(context.Background(), request)
+	response, err := client.GetProduct(context.Background(), request)
 
 	if err != nil {
 		log.Fatalf("Failed to greet: %v", err)
@@ -34,6 +32,5 @@ func main() {
 	   }
 	  
 	   fmt.Println("Response from server: " + response.String())
-	
 
 }
