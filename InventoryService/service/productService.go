@@ -65,3 +65,28 @@ func (c *ProductService) GetProduct(ctx context.Context, req *pb.GetProductReque
 
 	return response, nil
 }
+
+
+func (c *ProductService) GetAllProducts(ctx context.Context, req *pb.GetAllProductsRequest) (*pb.GetAllProductsResponse, error) {
+	fmt.Println("Received request for all products")
+
+	var products []pr.Product
+	if result := c.db.Find(&products); result.Error != nil {
+		fmt.Println("Some error occurred:", result.Error)
+		return nil, status.Errorf(codes.Internal, "Internal server error")
+	}
+
+	response := &pb.GetAllProductsResponse{}
+	for _, product := range products {
+		pbProduct := &pb.Product{
+			Id:       product.ID,
+			Name:     product.Name,
+			Price:    product.Price,
+			Quantity: int32(product.Quantity),
+		}
+		response.Products = append(response.Products, pbProduct)
+	}
+
+	return response, nil
+}
+

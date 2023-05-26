@@ -118,3 +118,48 @@ func TestGetProduct(t *testing.T) {
 }
 
 
+func TestGetAllProducts(t *testing.T) {
+	db, err := gorm.Open(sqlite.Open(":memory:"), &gorm.Config{})
+	if err != nil {
+		t.Fatalf("Failed to open database connection: %v", err)
+	}
+	db.AutoMigrate(&pr.Product{})
+
+	productService := &ProductService{
+		db:                                db,
+		UnimplementedProductServiceServer: pb.UnimplementedProductServiceServer{},
+	}
+
+	t.Run("GetAllProducts method should return all products", func(t *testing.T) {
+		
+		products := []pr.Product{
+			{ID: 1, Name: "Product 1", Price: 9.99, Quantity: 10},
+			{ID: 2, Name: "Product 2", Price: 19.99, Quantity: 5},
+			{ID: 3, Name: "Product 3", Price: 29.99, Quantity: 3},
+		}
+		for _, product := range products {
+			db.Create(&product)
+		}
+
+		
+		request := &pb.GetAllProductsRequest{}
+		response, err := productService.GetAllProducts(context.Background(), request)
+
+		assert.NoError(t, err, "Unexpected error")
+		assert.NotNil(t, response, "Response is nil")
+		assert.Equal(t, 3, len(response.Products), "Incorrect number of products returned")
+
+		
+		expectedProducts := []*pb.Product{
+			{Id: 1, Name: "Product 1", Price: 9.99, Quantity: 10},
+			{Id: 2, Name: "Product 2", Price: 19.99, Quantity: 5},
+			{Id: 3, Name: "Product 3", Price: 29.99, Quantity: 3},
+		}
+		for i, expectedProduct := range expectedProducts {
+			actualProduct := response.Products[i]
+			assert.Equal(t, expectedProduct, actualProduct, "Incorrect product data")
+		}
+	})
+}
+
+
