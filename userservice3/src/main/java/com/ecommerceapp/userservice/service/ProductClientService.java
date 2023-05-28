@@ -3,13 +3,14 @@ package com.ecommerceapp.userservice.service;
 import com.ecommerceapp.ProductServiceGrpc;
 import com.ecommerceapp.userservice.models.Product;
 import net.devh.boot.grpc.client.inject.GrpcClient;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 @Service
 public class ProductClientService {
 
     @GrpcClient("grpc-product-service")
-    ProductServiceGrpc.ProductServiceBlockingStub productServiceBlockingStub;
+    private ProductServiceGrpc.ProductServiceBlockingStub productServiceBlockingStub;
 
     public Product createProduct(Product product) {
         com.ecommerceapp.Product.CreateProductRequest createProductRequest = com.ecommerceapp.Product.CreateProductRequest.newBuilder()

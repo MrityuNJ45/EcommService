@@ -1,16 +1,12 @@
-package com.ecommerceapp.orderservice.model;
+package com.ecommerceapp.userservice.models;
 
-import com.google.protobuf.Timestamp;
 
-import javax.persistence.*;
 import java.time.LocalDateTime;
 
-@Entity
-@Table(name = "orders")
+
 public class Order {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+
     private Integer id;
 
     private Integer productId;

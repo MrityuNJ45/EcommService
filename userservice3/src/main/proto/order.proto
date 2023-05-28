@@ -1,0 +1,28 @@
+syntax = "proto3";
+
+option java_package = "com.ecommerceapp";
+
+import "google/protobuf/timestamp.proto";
+
+
+message CreateOrderRequest {
+  int32 productId = 1;
+  string userEmail = 2;
+}
+
+message OrderResponse {
+  int32 id = 1;
+  int32 productId = 2;
+  string userEmail = 3;
+  google.protobuf.Timestamp createdAt = 4;
+}
+
+
+message GetOrderResponse {
+  string userEmail = 1;
+}
+
+service OrderService {
+  rpc CreateOrder(CreateOrderRequest) returns (OrderResponse);
+  rpc GetOrder(GetOrderResponse) returns (OrderResponse);
+}
