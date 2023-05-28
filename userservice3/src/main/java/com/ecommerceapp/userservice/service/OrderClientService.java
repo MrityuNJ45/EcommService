@@ -29,17 +29,17 @@ public class OrderClientService {
 
     public com.ecommerceapp.userservice.models.Order createOrder(OrderDTO orderDTO) {
 
-        Product product = productClientService.getProduct(orderDTO.getOrderId());
+        Product product = productClientService.getProduct(orderDTO.getProductId());
         if(product.getQuantity() < 1) {
             throw new ProductException("Product out of stock");
         }
-
         Order.CreateOrderRequest createOrderRequest = Order.CreateOrderRequest.newBuilder()
-                .setProductId(orderDTO.getOrderId())
+                .setProductId(orderDTO.getProductId())
                 .setUserEmail(orderDTO.getUserEmail()).build();
         Order.OrderResponse response = orderServiceBlockingStub.createOrder(createOrderRequest);
         LocalDateTime timeOfOrder = LocalDateTime.ofInstant(Instant.ofEpochSecond(response.getCreatedAt().getSeconds(), response.getCreatedAt().getNanos()), ZoneOffset.UTC);
         com.ecommerceapp.userservice.models.Order modelResponse = new com.ecommerceapp.userservice.models.Order(response.getId(), response.getProductId(), response.getUserEmail(), timeOfOrder);
+        productClientService.decreaseQuantity(orderDTO.getProductId());
         return modelResponse;
     }
 
