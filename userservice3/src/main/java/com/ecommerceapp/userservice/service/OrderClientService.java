@@ -2,7 +2,6 @@ package com.ecommerceapp.userservice.service;
 
 import com.ecommerceapp.Order;
 import com.ecommerceapp.OrderServiceGrpc;
-import com.ecommerceapp.ProductServiceGrpc;
 import com.ecommerceapp.userservice.exceptions.ProductException;
 import com.ecommerceapp.userservice.models.OrderDTO;
 
@@ -30,13 +29,13 @@ public class OrderClientService {
 
     public com.ecommerceapp.userservice.models.Order createOrder(OrderDTO orderDTO) {
 
-        Product product = productClientService.getProduct(orderDTO.getUserId());
+        Product product = productClientService.getProduct(orderDTO.getOrderId());
         if(product.getQuantity() < 1) {
             throw new ProductException("Product out of stock");
         }
 
         Order.CreateOrderRequest createOrderRequest = Order.CreateOrderRequest.newBuilder()
-                .setProductId(orderDTO.getUserId())
+                .setProductId(orderDTO.getOrderId())
                 .setUserEmail(orderDTO.getUserEmail()).build();
         Order.OrderResponse response = orderServiceBlockingStub.createOrder(createOrderRequest);
         LocalDateTime timeOfOrder = LocalDateTime.ofInstant(Instant.ofEpochSecond(response.getCreatedAt().getSeconds(), response.getCreatedAt().getNanos()), ZoneOffset.UTC);
@@ -83,5 +82,7 @@ public class OrderClientService {
         return responseOrder;
 
     }
+
+
 
 }

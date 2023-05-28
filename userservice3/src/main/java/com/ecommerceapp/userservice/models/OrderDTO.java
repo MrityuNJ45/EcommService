@@ -2,24 +2,24 @@ package com.ecommerceapp.userservice.models;
 
 public class OrderDTO {
 
-    private Integer userId;
+    private Integer orderId;
 
     private String userEmail;
 
     public OrderDTO(Integer userId, String userEmail) {
-        this.userId = userId;
+        this.orderId = userId;
         this.userEmail = userEmail;
     }
 
     public OrderDTO() {
     }
 
-    public Integer getUserId() {
-        return userId;
+    public Integer getOrderId() {
+        return orderId;
     }
 
-    public void setUserId(Integer userId) {
-        this.userId = userId;
+    public void setOrderId(Integer orderId) {
+        this.orderId = orderId;
     }
 
     public String getUserEmail() {
