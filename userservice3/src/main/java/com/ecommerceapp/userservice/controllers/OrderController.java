@@ -4,6 +4,7 @@ import com.ecommerceapp.userservice.models.Order;
 import com.ecommerceapp.userservice.models.OrderDTO;
 import com.ecommerceapp.userservice.service.OrderClientService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -15,8 +16,9 @@ public class OrderController {
     @Autowired
     private OrderClientService orderClientService;
 
-    @PostMapping("/create")
-    public Order createOrder(@RequestBody OrderDTO orderDTO) {
+    @PostMapping("/create/{productId}")
+    public Order createOrder(@PathVariable("productId") Integer productId, @AuthenticationPrincipal(expression = "username") String email) {
+        OrderDTO orderDTO = new OrderDTO(productId, email);
         return orderClientService.createOrder(orderDTO);
     }
 
@@ -25,8 +27,8 @@ public class OrderController {
         return orderClientService.getOrder(orderId);
     }
 
-    @GetMapping("/get/all/{userEmail}")
-    public List<Order> getAllOrdersOfUserHandler(@PathVariable("userEmail") String userEmail) {
+    @GetMapping("/get/user/all")
+    public List<Order> getAllOrdersOfUserHandler(@AuthenticationPrincipal(expression = "username") String userEmail) {
         return orderClientService.getAllOrdersOfUser(userEmail);
     }
 
