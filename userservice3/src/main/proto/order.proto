@@ -18,11 +18,30 @@ message OrderResponse {
 }
 
 
-message GetOrderResponse {
+message GetOrderRequest {
+  int32 orderId = 1;
+}
+
+message GetAllOrdersOfUserRequest {
   string userEmail = 1;
+}
+
+
+message GetAllOrdersOfUserResponse {
+  repeated OrderResponse orders= 1;
+}
+
+message GetAllOrdersRequest {
+
+}
+
+message GetAllOrdersResponse {
+  repeated OrderResponse orders = 1;
 }
 
 service OrderService {
   rpc CreateOrder(CreateOrderRequest) returns (OrderResponse);
-  rpc GetOrder(GetOrderResponse) returns (OrderResponse);
+  rpc GetOrder(GetOrderRequest) returns (OrderResponse);
+  rpc GetAllOrdersOfUser(GetAllOrdersOfUserRequest) returns (GetAllOrdersOfUserResponse);
+  rpc GetAllOrders(GetAllOrdersRequest) returns (GetAllOrdersResponse);
 }
