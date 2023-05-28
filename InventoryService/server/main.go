@@ -4,9 +4,9 @@ import (
 	
 	
 
-	pb "ecommerceApp/inventoryService/proto/product"
-	repo "ecommerceApp/inventoryService/repository"
-	srv "ecommerceApp/inventoryService/service"
+	pb "inventory-service/proto/product"
+	repo "inventory-service/repository"
+	srv "inventory-service/service"
 
 	"fmt"
 	"log"
@@ -22,9 +22,9 @@ import (
 
 func main() {
 
-	fmt.Println("Starting server on port :8080")
+	fmt.Println("Starting server on port :8888")
 
-	lis, err := net.Listen("tcp", ":8080")
+	lis, err := net.Listen("tcp", ":8888")
 	if err != nil {
 		log.Fatalf("Failed to listen: %v", err)
 		return

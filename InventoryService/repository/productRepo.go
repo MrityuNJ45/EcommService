@@ -1,7 +1,7 @@
 package repository
 
 import (
-	product "ecommerceApp/inventoryService/models"
+	product "inventory-service/models"
 	"errors"
 	"fmt"
 

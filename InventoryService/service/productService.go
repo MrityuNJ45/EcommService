@@ -2,10 +2,10 @@ package service
 
 import (
 	"context"
-	pr "ecommerceApp/inventoryService/models"
-	pb "ecommerceApp/inventoryService/proto/product"
 	"errors"
 	"fmt"
+	pr "inventory-service/models"
+	pb "inventory-service/proto/product"
 
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -39,7 +39,10 @@ func (c *ProductService) CreateProduct(ctx context.Context, req *pb.CreateProduc
 	}
 
 	return &pb.CreateProductResponse{
-		Id: product.ID,
+		Id:       product.ID,
+		Name:     product.Name,
+		Price:    product.Price,
+		Quantity: int32(product.Quantity),
 	}, nil
 
 }
@@ -58,6 +61,7 @@ func (c *ProductService) GetProduct(ctx context.Context, req *pb.GetProductReque
 	}
 
 	response := &pb.GetProductResponse{
+		Id:       product.ID,
 		Name:     product.Name,
 		Price:    product.Price,
 		Quantity: int32(product.Quantity),
@@ -65,7 +69,6 @@ func (c *ProductService) GetProduct(ctx context.Context, req *pb.GetProductReque
 
 	return response, nil
 }
-
 
 func (c *ProductService) GetAllProducts(ctx context.Context, req *pb.GetAllProductsRequest) (*pb.GetAllProductsResponse, error) {
 	fmt.Println("Received request for all products")
@@ -90,3 +93,46 @@ func (c *ProductService) GetAllProducts(ctx context.Context, req *pb.GetAllProdu
 	return response, nil
 }
 
+func (c *ProductService) UpdateQuantity(ctx context.Context, req *pb.UpdateQuantityRequest) (*pb.UpdateQuantityResponse, error) {
+
+	var product pr.Product
+	if result := c.db.First(&product, req.Id); result.Error != nil {
+		fmt.Println("Failed to retrieve product from the database:", result.Error)
+		return nil, result.Error
+	}
+
+	product.Quantity += int(req.Quantity)
+
+	if result := c.db.Save(&product); result.Error != nil {
+		fmt.Println("Failed to update product quantity:", result.Error)
+		return nil, result.Error
+	}
+
+	return &pb.UpdateQuantityResponse{
+		Product: &pb.Product{
+			Id:       product.ID,
+			Name:     product.Name,
+			Price:    product.Price,
+			Quantity: int32(product.Quantity)},
+	}, nil
+}
+
+func (c *ProductService) DecreaseQuantity(ctx context.Context, req *pb.DecreaseQuantityRequest) (*pb.DecreaseQuantityResponse, error) {
+
+	var product pr.Product
+	if result := c.db.First(&product, req.Id); result.Error != nil {
+		fmt.Println("Failed to retrieve product from the database:", result.Error)
+		return nil, result.Error
+	}
+
+	product.Quantity -= 1
+
+	if result := c.db.Save(&product); result.Error != nil {
+		fmt.Println("Failed to decrease product quantity:", result.Error)
+		return nil, result.Error
+	}
+
+	return &pb.DecreaseQuantityResponse{
+		
+	}, nil
+}

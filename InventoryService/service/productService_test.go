@@ -2,11 +2,11 @@ package service
 
 import (
 	"context"
-	pr "ecommerceApp/inventoryService/models"
+	pr "inventory-service/models"
 
 	"testing"
 
-	pb "ecommerceApp/inventoryService/proto/product"
+	pb "inventory-service/proto/product"
 
 	"github.com/stretchr/testify/assert"
 	"google.golang.org/grpc/codes"

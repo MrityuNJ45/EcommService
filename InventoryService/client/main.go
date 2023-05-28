@@ -2,7 +2,7 @@ package main
 
 import (
 	"context"
-	pb "ecommerceApp/inventoryService/proto/product"
+	pb "inventory-service/proto/product"
 	"fmt"
 	"log"
 
@@ -12,7 +12,7 @@ import (
 func main() {
 	fmt.Println("Starting gRPC client application...")
 
-	conn, err := grpc.Dial("localhost:8080", grpc.WithInsecure(), grpc.WithBlock())
+	conn, err := grpc.Dial("localhost:8888", grpc.WithInsecure(), grpc.WithBlock())
 	if err != nil {
 	 log.Fatalf("Failed to dial: %v", err)
 	 return
@@ -22,6 +22,7 @@ func main() {
 
 	request := &pb.GetProductRequest{
 		Id: 1,
+		
 	}
 
 	response, err := client.GetProduct(context.Background(), request)

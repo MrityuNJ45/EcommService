@@ -19,9 +19,11 @@ import (
 const _ = grpc.SupportPackageIsVersion7
 
 const (
-	ProductService_CreateProduct_FullMethodName  = "/ProductService/CreateProduct"
-	ProductService_GetProduct_FullMethodName     = "/ProductService/GetProduct"
-	ProductService_GetAllProducts_FullMethodName = "/ProductService/GetAllProducts"
+	ProductService_CreateProduct_FullMethodName    = "/ProductService/CreateProduct"
+	ProductService_GetProduct_FullMethodName       = "/ProductService/GetProduct"
+	ProductService_GetAllProducts_FullMethodName   = "/ProductService/GetAllProducts"
+	ProductService_UpdateQuantity_FullMethodName   = "/ProductService/UpdateQuantity"
+	ProductService_DecreaseQuantity_FullMethodName = "/ProductService/DecreaseQuantity"
 )
 
 // ProductServiceClient is the client API for ProductService service.
@@ -31,6 +33,8 @@ type ProductServiceClient interface {
 	CreateProduct(ctx context.Context, in *CreateProductRequest, opts ...grpc.CallOption) (*CreateProductResponse, error)
 	GetProduct(ctx context.Context, in *GetProductRequest, opts ...grpc.CallOption) (*GetProductResponse, error)
 	GetAllProducts(ctx context.Context, in *GetAllProductsRequest, opts ...grpc.CallOption) (*GetAllProductsResponse, error)
+	UpdateQuantity(ctx context.Context, in *UpdateQuantityRequest, opts ...grpc.CallOption) (*UpdateQuantityResponse, error)
+	DecreaseQuantity(ctx context.Context, in *DecreaseQuantityRequest, opts ...grpc.CallOption) (*DecreaseQuantityResponse, error)
 }
 
 type productServiceClient struct {
@@ -68,6 +72,24 @@ func (c *productServiceClient) GetAllProducts(ctx context.Context, in *GetAllPro
 	return out, nil
 }
 
+func (c *productServiceClient) UpdateQuantity(ctx context.Context, in *UpdateQuantityRequest, opts ...grpc.CallOption) (*UpdateQuantityResponse, error) {
+	out := new(UpdateQuantityResponse)
+	err := c.cc.Invoke(ctx, ProductService_UpdateQuantity_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *productServiceClient) DecreaseQuantity(ctx context.Context, in *DecreaseQuantityRequest, opts ...grpc.CallOption) (*DecreaseQuantityResponse, error) {
+	out := new(DecreaseQuantityResponse)
+	err := c.cc.Invoke(ctx, ProductService_DecreaseQuantity_FullMethodName, in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // ProductServiceServer is the server API for ProductService service.
 // All implementations must embed UnimplementedProductServiceServer
 // for forward compatibility
@@ -75,6 +97,8 @@ type ProductServiceServer interface {
 	CreateProduct(context.Context, *CreateProductRequest) (*CreateProductResponse, error)
 	GetProduct(context.Context, *GetProductRequest) (*GetProductResponse, error)
 	GetAllProducts(context.Context, *GetAllProductsRequest) (*GetAllProductsResponse, error)
+	UpdateQuantity(context.Context, *UpdateQuantityRequest) (*UpdateQuantityResponse, error)
+	DecreaseQuantity(context.Context, *DecreaseQuantityRequest) (*DecreaseQuantityResponse, error)
 	mustEmbedUnimplementedProductServiceServer()
 }
 
@@ -90,6 +114,12 @@ func (UnimplementedProductServiceServer) GetProduct(context.Context, *GetProduct
 }
 func (UnimplementedProductServiceServer) GetAllProducts(context.Context, *GetAllProductsRequest) (*GetAllProductsResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method GetAllProducts not implemented")
+}
+func (UnimplementedProductServiceServer) UpdateQuantity(context.Context, *UpdateQuantityRequest) (*UpdateQuantityResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method UpdateQuantity not implemented")
+}
+func (UnimplementedProductServiceServer) DecreaseQuantity(context.Context, *DecreaseQuantityRequest) (*DecreaseQuantityResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method DecreaseQuantity not implemented")
 }
 func (UnimplementedProductServiceServer) mustEmbedUnimplementedProductServiceServer() {}
 
@@ -158,6 +188,42 @@ func _ProductService_GetAllProducts_Handler(srv interface{}, ctx context.Context
 	return interceptor(ctx, in, info, handler)
 }
 
+func _ProductService_UpdateQuantity_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(UpdateQuantityRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ProductServiceServer).UpdateQuantity(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: ProductService_UpdateQuantity_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ProductServiceServer).UpdateQuantity(ctx, req.(*UpdateQuantityRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _ProductService_DecreaseQuantity_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(DecreaseQuantityRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(ProductServiceServer).DecreaseQuantity(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: ProductService_DecreaseQuantity_FullMethodName,
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(ProductServiceServer).DecreaseQuantity(ctx, req.(*DecreaseQuantityRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // ProductService_ServiceDesc is the grpc.ServiceDesc for ProductService service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -176,6 +242,14 @@ var ProductService_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "GetAllProducts",
 			Handler:    _ProductService_GetAllProducts_Handler,
+		},
+		{
+			MethodName: "UpdateQuantity",
+			Handler:    _ProductService_UpdateQuantity_Handler,
+		},
+		{
+			MethodName: "DecreaseQuantity",
+			Handler:    _ProductService_DecreaseQuantity_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},
