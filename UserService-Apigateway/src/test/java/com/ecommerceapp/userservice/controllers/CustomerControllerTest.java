@@ -53,7 +53,7 @@ public class CustomerControllerTest {
     }
 
     @Test
-    public void testCreateCustomer() throws Exception {
+    public void expectsToGetOkWhenSavingAValidCustomer() throws Exception {
         Customer customer = new Customer();
         customer.setEmail("test@example.com");
         customer.setPassword("password");
@@ -71,7 +71,7 @@ public class CustomerControllerTest {
     }
 
     @Test
-    public void testCreateCustomer_NullCustomer() throws Exception {
+    public void expectsToGetBadRequestWhenInvalidCustomerIsAdded() throws Exception {
         mockMvc.perform(post("/customer/create")
                         .contentType("application/json")
                         .content(""))
@@ -82,7 +82,7 @@ public class CustomerControllerTest {
     }
 
     @Test
-    public void testCreateCustomer_InvalidRole() throws Exception {
+    public void expectsToGetBadRequestWhenInvalidRoleIsAdded() throws Exception {
         mockMvc.perform(post("/customer/create")
                         .contentType("application/json")
                         .content("{\"email\": \"test@example.com\", \"password\": \"password\", \"role\": \"INVALID_ROLE\"}"))
@@ -93,7 +93,7 @@ public class CustomerControllerTest {
     }
 
     @Test
-    public void testGetCustomer() throws Exception {
+    public void expectsToGetOkStatusWhenGettingACustomer() throws Exception {
         Customer customer = new Customer();
         customer.setEmail("test@example.com");
 
@@ -107,7 +107,7 @@ public class CustomerControllerTest {
     }
 
     @Test
-    public void testGetCustomer_UnauthorizedUser() throws Exception {
+    public void expectsToGetUnauthorisedStatusWhenAuthenticationIsNotThere() throws Exception {
         mockMvc.perform(get("/customer/get"))
                 .andExpect(status().isUnauthorized());
     }
