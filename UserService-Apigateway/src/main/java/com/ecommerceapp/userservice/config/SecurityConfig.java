@@ -18,6 +18,7 @@ public class SecurityConfig {
         http.authorizeHttpRequests()
                 .antMatchers(HttpMethod.POST, "/customer/create").permitAll()
                 .antMatchers(HttpMethod.PUT, "/product/update/**").hasRole("ADMIN")
+                .antMatchers(HttpMethod.POST, "/product/create").hasRole("ADMIN")
                 .antMatchers(HttpMethod.GET, "/order/get/all").hasRole("ADMIN")
                 .anyRequest()
                 .authenticated().and().csrf().disable().formLogin().and().httpBasic();
