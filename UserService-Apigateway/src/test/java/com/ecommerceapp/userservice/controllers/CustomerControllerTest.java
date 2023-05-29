@@ -48,7 +48,7 @@ public class CustomerControllerTest {
 
     @BeforeEach
     public void setUp() {
-        //MockitoAnnotations.initMocks(this);
+
         mockMvc = MockMvcBuilders.webAppContextSetup(context).apply(springSecurity()).build();
     }
 
