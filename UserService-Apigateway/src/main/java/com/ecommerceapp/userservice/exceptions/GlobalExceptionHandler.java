@@ -13,25 +13,28 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(ProductException.class)
     public ResponseEntity<ErrorDetails> myExpHandler(ProductException ie, WebRequest req){
-
         ErrorDetails err = new ErrorDetails();
         err.setTimeStamp(LocalDateTime.now());
         err.setMessage(ie.getMessage());
         err.setDescription(req.getDescription(false));
-
         return new ResponseEntity<ErrorDetails>(err, HttpStatus.BAD_REQUEST);
     }
 
+    @ExceptionHandler(CustomerException.class)
+    public ResponseEntity<ErrorDetails> customerExceptionHandler(CustomerException ce, WebRequest request) {
+        ErrorDetails err = new ErrorDetails();
+        err.setTimeStamp(LocalDateTime.now());
+        err.setMessage(ce.getMessage());
+        err.setDescription(request.getDescription(false));
+        return new ResponseEntity<ErrorDetails>(err, HttpStatus.BAD_REQUEST);
+    }
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ErrorDetails> myAnyExpHandler(Exception ie,WebRequest req){
-
         ErrorDetails err = new ErrorDetails();
         err.setTimeStamp(LocalDateTime.now());
         err.setMessage(ie.getMessage());
         err.setDescription(req.getDescription(false));
-
         return new ResponseEntity<ErrorDetails>(err, HttpStatus.BAD_REQUEST);
-
     }
 
 }
