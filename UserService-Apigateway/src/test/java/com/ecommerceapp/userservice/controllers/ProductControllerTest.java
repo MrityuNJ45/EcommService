@@ -138,4 +138,21 @@ class ProductControllerTest {
 
 
 
+    @Test
+    @WithMockUser(username = "valid@gmail.com", roles = "ADMIN")
+    public void testUpdateQuantity() throws Exception {
+        Product product = new Product();
+        product.setId(1);
+        product.setName("Test Product");
+
+        when(productClientService.updateQuantity(eq(1), anyInt())).thenReturn(product);
+
+        mockMvc.perform(put("/product/update/quantity/{id}/{quantity}", 1, 10))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(1))
+                .andExpect(jsonPath("$.name").value("Test Product"));
+
+        verify(productClientService, times(1)).updateQuantity(eq(1), anyInt());
+    }
+
 }
