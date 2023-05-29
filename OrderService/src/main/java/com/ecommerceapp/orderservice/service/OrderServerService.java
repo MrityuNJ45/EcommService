@@ -29,7 +29,6 @@ public class OrderServerService extends OrderServiceGrpc.OrderServiceImplBase {
         order.setUserEmail(request.getUserEmail());
         order.setCreatedAt(LocalDateTime.now());
         com.ecommerceapp.orderservice.model.Order savedOrder = orderRepository.save(order);
-        //com.ecommerceapp.orderservice.model.Order savedOrder = new com.ecommerceapp.orderservice.model.Order(order.getId(), order.getProductId(), order.getUserEmail(), order.getCreatedAt());
 
         Timestamp orderTimeStamp = Timestamp.newBuilder()
                 .setSeconds(savedOrder.getCreatedAt().toEpochSecond(ZoneOffset.UTC))
@@ -42,7 +41,6 @@ public class OrderServerService extends OrderServiceGrpc.OrderServiceImplBase {
                 .setCreatedAt(orderTimeStamp).build();
         responseObserver.onNext(response);
         responseObserver.onCompleted();
-
     }
 
     @Override
