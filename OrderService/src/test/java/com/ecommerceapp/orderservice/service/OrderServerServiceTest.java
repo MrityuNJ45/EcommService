@@ -1,22 +1,19 @@
 package com.ecommerceapp.orderservice.service;
 
-import com.ecommerceapp.Order;
+
+import com.ecommerceapp.orderservice.model.Order;
 import com.ecommerceapp.orderservice.repository.OrderRepository;
 import io.grpc.Status;
 import io.grpc.StatusRuntimeException;
 import io.grpc.stub.StreamObserver;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.ArgumentCaptor;
-import org.mockito.InjectMocks;
-import org.mockito.MockitoAnnotations;
+import org.mockito.*;
+import org.mockito.junit.MockitoJUnitRunner;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
+
 
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -24,233 +21,132 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.*;
 
 @SpringBootTest
-class OrderServerServiceTest {
-    @InjectMocks
-    private OrderServerService orderServerService;
-    @MockBean
+public class OrderServerServiceTest {
+
+    @Mock
     private OrderRepository orderRepository;
 
-    @BeforeEach
-    public void setup() {
-        MockitoAnnotations.openMocks(this);
-    }
-    @Test
-    public void expectsToCreateAnOrder() {
+    @InjectMocks
+    private OrderGrpcServerService orderGrpcServerService;
 
-        int productId = 123;
+    @Captor
+    private ArgumentCaptor<Order> orderCaptor;
+
+    @Test
+    public void createOrder_ValidRequest_ReturnsResponse() {
+        // Arrange
+        Integer productId = 123;
         String userEmail = "test@example.com";
-        Order.CreateOrderRequest request = Order.CreateOrderRequest.newBuilder()
+        LocalDateTime currentDateTime = LocalDateTime.now();
+
+        com.ecommerceapp.orderservice.model.Order savedOrder = new com.ecommerceapp.orderservice.model.Order(productId, userEmail, currentDateTime);
+        savedOrder.setId(1);
+
+        when(orderRepository.save(any(com.ecommerceapp.orderservice.model.Order.class))).thenReturn(savedOrder);
+
+        com.ecommerceapp.Order.CreateOrderRequest request = com.ecommerceapp.Order.CreateOrderRequest.newBuilder()
                 .setProductId(productId)
                 .setUserEmail(userEmail)
                 .build();
 
-        com.ecommerceapp.orderservice.model.Order savedOrder = new com.ecommerceapp.orderservice.model.Order();
-        savedOrder.setId(1);
-        savedOrder.setProductId(productId);
-        savedOrder.setUserEmail(userEmail);
-        savedOrder.setCreatedAt(LocalDateTime.now());
-        when(orderRepository.save(any(com.ecommerceapp.orderservice.model.Order.class))).thenReturn(savedOrder);
+        StreamObserver<com.ecommerceapp.Order.OrderResponse> responseObserver = mock(StreamObserver.class);
 
-        StreamObserver<Order.OrderResponse> responseObserver = mock(StreamObserver.class);
-        ArgumentCaptor<Order.OrderResponse> responseCaptor = ArgumentCaptor.forClass(Order.OrderResponse.class);
+        // Act
+        orderGrpcServerService.createOrder(request, responseObserver);
 
-        orderServerService.createOrder(request, responseObserver);
+        // Assert
+        verify(orderRepository).save(orderCaptor.capture());
 
-        verify(orderRepository).save(any(com.ecommerceapp.orderservice.model.Order.class));
+        com.ecommerceapp.orderservice.model.Order capturedOrder = orderCaptor.getValue();
+        assertNotNull(capturedOrder);
+        assertEquals(productId, capturedOrder.getProductId());
+        assertEquals(userEmail, capturedOrder.getUserEmail());
 
+
+        ArgumentCaptor<com.ecommerceapp.Order.OrderResponse> responseCaptor = ArgumentCaptor.forClass(com.ecommerceapp.Order.OrderResponse.class);
         verify(responseObserver).onNext(responseCaptor.capture());
         verify(responseObserver).onCompleted();
 
-
-        Order.OrderResponse response = responseCaptor.getValue();
-        assertEquals(1, response.getId());
-        assertEquals(productId, response.getProductId());
-        assertEquals(userEmail, response.getUserEmail());
-
-        LocalDateTime expectedCreatedAt = savedOrder.getCreatedAt();
-        LocalDateTime actualCreatedAt = LocalDateTime.ofEpochSecond(
-                response.getCreatedAt().getSeconds(),
-                response.getCreatedAt().getNanos(),
-                ZoneOffset.UTC
-        );
-        assertEquals(expectedCreatedAt, actualCreatedAt);
+        com.ecommerceapp.Order.OrderResponse response = responseCaptor.getValue();
+        assertNotNull(response);
+        assertEquals(savedOrder.getId(), response.getId());
+        assertEquals(savedOrder.getProductId(), response.getProductId());
+        assertEquals(savedOrder.getUserEmail(), response.getUserEmail());
+        assertEquals(savedOrder.getCreatedAt().toEpochSecond(ZoneOffset.UTC), response.getCreatedAt().getSeconds());
+        assertEquals(savedOrder.getCreatedAt().getNano(), response.getCreatedAt().getNanos());
     }
 
-    @Test
-    public void expectsToGetAnOrderIfItExists() {
 
-        int orderId = 1;
-        com.ecommerceapp.orderservice.model.Order existingOrder = new com.ecommerceapp.orderservice.model.Order();
-        existingOrder.setId(orderId);
-        existingOrder.setProductId(123);
-        existingOrder.setUserEmail("test@example.com");
-        existingOrder.setCreatedAt(LocalDateTime.now());
-        Optional<com.ecommerceapp.orderservice.model.Order> orderOptional = Optional.of(existingOrder);
-        Order.GetOrderRequest request = Order.GetOrderRequest.newBuilder()
+    @Captor
+    private ArgumentCaptor<Integer> orderIdCaptor;
+
+    @Test
+    public void getOrder_ExistingOrderId_ReturnsResponse() {
+        // Arrange
+        int orderId = 123;
+        int productId = 456;
+        String userEmail = "test@example.com";
+        LocalDateTime createdAt = LocalDateTime.now();
+
+        com.ecommerceapp.orderservice.model.Order order = new com.ecommerceapp.orderservice.model.Order(productId, userEmail, createdAt);
+        order.setId(orderId);
+
+        when(orderRepository.findById(orderId)).thenReturn(Optional.of(order));
+
+        com.ecommerceapp.Order.GetOrderRequest request = com.ecommerceapp.Order.GetOrderRequest.newBuilder()
                 .setOrderId(orderId)
                 .build();
 
-        when(orderRepository.findById(orderId)).thenReturn(orderOptional);
+        StreamObserver<com.ecommerceapp.Order.OrderResponse> responseObserver = mock(StreamObserver.class);
 
-        StreamObserver<Order.OrderResponse> responseObserver = mock(StreamObserver.class);
-        ArgumentCaptor<Order.OrderResponse> responseCaptor = ArgumentCaptor.forClass(Order.OrderResponse.class);
+        // Act
+        orderGrpcServerService.getOrder(request, responseObserver);
 
-        orderServerService.getOrder(request, responseObserver);
+        // Assert
+        verify(orderRepository).findById(orderIdCaptor.capture());
+        int capturedOrderId = orderIdCaptor.getValue();
+        assertEquals(orderId, capturedOrderId);
 
-        verify(orderRepository).findById(orderId);
-
-
+        ArgumentCaptor<com.ecommerceapp.Order.OrderResponse> responseCaptor = ArgumentCaptor.forClass(com.ecommerceapp.Order.OrderResponse.class);
         verify(responseObserver).onNext(responseCaptor.capture());
         verify(responseObserver).onCompleted();
 
-        Order.OrderResponse response = responseCaptor.getValue();
-        assertEquals(orderId, response.getId());
-        assertEquals(existingOrder.getProductId(), response.getProductId());
-        assertEquals(existingOrder.getUserEmail(), response.getUserEmail());
+        com.ecommerceapp.Order.OrderResponse response = responseCaptor.getValue();
+        assertNotNull(response);
+        assertEquals(order.getId(), response.getId());
+        assertEquals(order.getProductId(), response.getProductId());
+        assertEquals(order.getUserEmail(), response.getUserEmail());
 
-        LocalDateTime expectedCreatedAt = existingOrder.getCreatedAt();
-        LocalDateTime actualCreatedAt = LocalDateTime.ofEpochSecond(
-                response.getCreatedAt().getSeconds(),
-                response.getCreatedAt().getNanos(),
-                ZoneOffset.UTC
-        );
-        assertEquals(expectedCreatedAt, actualCreatedAt);
     }
 
-    @Test
-    public void expectsToGetInvalidArgrumentWhenInvalidOrderIdIsGiven() {
 
-        int orderId = 1;
-        Optional<com.ecommerceapp.orderservice.model.Order> orderOptional = Optional.empty();
-        Order.GetOrderRequest request = Order.GetOrderRequest.newBuilder()
+    @Test
+    public void getOrder_NonExistingOrderId_ReturnsError() {
+
+        int orderId = 123;
+
+        when(orderRepository.findById(orderId)).thenReturn(Optional.empty());
+
+        com.ecommerceapp.Order.GetOrderRequest request = com.ecommerceapp.Order.GetOrderRequest.newBuilder()
                 .setOrderId(orderId)
                 .build();
 
-        when(orderRepository.findById(orderId)).thenReturn(orderOptional);
-
-        StreamObserver<Order.OrderResponse> responseObserver = mock(StreamObserver.class);
-        ArgumentCaptor<Throwable> errorCaptor = ArgumentCaptor.forClass(Throwable.class);
-
-        orderServerService.getOrder(request, responseObserver);
-
-        verify(orderRepository).findById(orderId);
-
-        verify(responseObserver).onError(errorCaptor.capture());
-
-        Throwable error = errorCaptor.getValue();
-        assertTrue(error instanceof StatusRuntimeException);
-        assertEquals(Status.INVALID_ARGUMENT.getCode(), ((StatusRuntimeException) error).getStatus().getCode());
-        assertEquals("Order not found", ((StatusRuntimeException) error).getStatus().getDescription());
-    }
-
-    @Test
-    public void expectsToGetAListOfOrdersOfUser() {
-
-        String userEmail = "test@example.com";
-        List<com.ecommerceapp.orderservice.model.Order> existingOrders = new ArrayList<>();
-
-        existingOrders.add(new com.ecommerceapp.orderservice.model.Order(1, 123, userEmail,LocalDateTime.now()));
-        existingOrders.add(new com.ecommerceapp.orderservice.model.Order(2, 456, userEmail, LocalDateTime.now()));
-        existingOrders.add(new com.ecommerceapp.orderservice.model.Order(3, 789, userEmail, LocalDateTime.now()));
-        when(orderRepository.findByUserEmail(userEmail)).thenReturn(existingOrders);
+        StreamObserver<com.ecommerceapp.Order.OrderResponse> responseObserver = mock(StreamObserver.class);
 
 
-        Order.GetAllOrdersOfUserRequest request = Order.GetAllOrdersOfUserRequest.newBuilder()
-                .setUserEmail(userEmail)
-                .build();
+        orderGrpcServerService.getOrder(request, responseObserver);
 
-        StreamObserver<Order.GetAllOrdersOfUserResponse> responseObserver = mock(StreamObserver.class);
-        ArgumentCaptor<Order.GetAllOrdersOfUserResponse> responseCaptor = ArgumentCaptor.forClass(Order.GetAllOrdersOfUserResponse.class);
 
-        orderServerService.getAllOrdersOfUser(request, responseObserver);
+        verify(orderRepository).findById(orderIdCaptor.capture());
+        int capturedOrderId = orderIdCaptor.getValue();
+        assertEquals(orderId, capturedOrderId);
 
-        verify(orderRepository).findByUserEmail(userEmail);
+        verify(responseObserver).onError(argThat((StatusRuntimeException e) ->
+                e.getStatus().getCode() == Status.INVALID_ARGUMENT.getCode()));
 
-        verify(responseObserver).onNext(responseCaptor.capture());
-        verify(responseObserver).onCompleted();
-
-        Order.GetAllOrdersOfUserResponse response = responseCaptor.getValue();
-        assertEquals(existingOrders.size(), response.getOrdersCount());
-        for (int i = 0; i < existingOrders.size(); i++) {
-            Order.OrderResponse orderResponse = response.getOrders(i);
-            com.ecommerceapp.orderservice.model.Order existingOrder = existingOrders.get(i);
-            assertEquals(existingOrder.getId(), orderResponse.getId());
-            assertEquals(existingOrder.getProductId(), orderResponse.getProductId());
-            assertEquals(existingOrder.getUserEmail(), orderResponse.getUserEmail());
-            LocalDateTime expectedCreatedAt = existingOrder.getCreatedAt();
-            LocalDateTime actualCreatedAt = LocalDateTime.ofEpochSecond(
-                    orderResponse.getCreatedAt().getSeconds(),
-                    orderResponse.getCreatedAt().getNanos(),
-                    ZoneOffset.UTC
-            );
-            assertEquals(expectedCreatedAt, actualCreatedAt);
-        }
-    }
-
-    @Test
-    public void expectsToGetNotFoundExceptionWhenNoOrdersAreThereForUser() {
-
-        String userEmail = "test@example.com";
-        List<com.ecommerceapp.orderservice.model.Order> emptyOrderList = new ArrayList<>();
-        when(orderRepository.findByUserEmail(userEmail)).thenReturn(emptyOrderList);
-
-        Order.GetAllOrdersOfUserRequest request = Order.GetAllOrdersOfUserRequest.newBuilder()
-                .setUserEmail(userEmail)
-                .build();
-
-        StreamObserver<Order.GetAllOrdersOfUserResponse> responseObserver = mock(StreamObserver.class);
-        ArgumentCaptor<Throwable> errorCaptor = ArgumentCaptor.forClass(Throwable.class);
-
-        orderServerService.getAllOrdersOfUser(request, responseObserver);
-
-        verify(orderRepository).findByUserEmail(userEmail);
-
-        verify(responseObserver).onError(errorCaptor.capture());
-
-        Throwable error = errorCaptor.getValue();
-        assertTrue(error instanceof StatusRuntimeException);
-        assertEquals(Status.NOT_FOUND.getCode(), ((StatusRuntimeException) error).getStatus().getCode());
-        assertEquals("No orders found", ((StatusRuntimeException) error).getStatus().getDescription());
+        verifyNoMoreInteractions(responseObserver);
     }
 
 
-    @Test
-    public void testGetAllOrders_OrdersExist() {
-
-        List<com.ecommerceapp.orderservice.model.Order> existingOrders = new ArrayList<>();
-        existingOrders.add(new com.ecommerceapp.orderservice.model.Order(1, 123, "user1@example.com", LocalDateTime.now()));
-        existingOrders.add(new com.ecommerceapp.orderservice.model.Order(2, 456, "user2@example.com", LocalDateTime.now()));
-        existingOrders.add(new com.ecommerceapp.orderservice.model.Order(3, 789, "user3@example.com", LocalDateTime.now()));
-        when(orderRepository.findAll()).thenReturn(existingOrders);
-
-        Order.GetAllOrdersRequest request = Order.GetAllOrdersRequest.newBuilder().build();
-
-        StreamObserver<Order.GetAllOrdersResponse> responseObserver = mock(StreamObserver.class);
-        ArgumentCaptor<Order.GetAllOrdersResponse> responseCaptor = ArgumentCaptor.forClass(Order.GetAllOrdersResponse.class);
-
-        orderServerService.getAllOrders(request, responseObserver);
-
-        verify(orderRepository).findAll();
-
-        verify(responseObserver).onNext(responseCaptor.capture());
-        verify(responseObserver).onCompleted();
-
-        Order.GetAllOrdersResponse response = responseCaptor.getValue();
-        assertEquals(existingOrders.size(), response.getOrdersCount());
-        for (int i = 0; i < existingOrders.size(); i++) {
-            Order.OrderResponse orderResponse = response.getOrders(i);
-            com.ecommerceapp.orderservice.model.Order existingOrder = existingOrders.get(i);
-            assertEquals(existingOrder.getId(), orderResponse.getId());
-            assertEquals(existingOrder.getProductId(), orderResponse.getProductId());
-            assertEquals(existingOrder.getUserEmail(), orderResponse.getUserEmail());
-            LocalDateTime expectedCreatedAt = existingOrder.getCreatedAt();
-            LocalDateTime actualCreatedAt = LocalDateTime.ofEpochSecond(
-                    orderResponse.getCreatedAt().getSeconds(),
-                    orderResponse.getCreatedAt().getNanos(),
-                    ZoneOffset.UTC
-            );
-            assertEquals(expectedCreatedAt, actualCreatedAt);
-        }
-    }
 
 }

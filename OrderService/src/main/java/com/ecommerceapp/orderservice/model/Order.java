@@ -1,12 +1,20 @@
 package com.ecommerceapp.orderservice.model;
 
 import com.google.protobuf.Timestamp;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import javax.persistence.*;
 import java.time.LocalDateTime;
 
 @Entity
 @Table(name = "orders")
+@AllArgsConstructor
+@NoArgsConstructor
+@Data
+@Builder
 public class Order {
 
     @Id
@@ -19,45 +27,9 @@ public class Order {
 
     private LocalDateTime createdAt;
 
-    public Order(Integer id, Integer productId, String userEmail, LocalDateTime createdAt) {
-        this.id = id;
+    public Order(Integer productId, String userEmail, LocalDateTime createdAt) {
         this.productId = productId;
         this.userEmail = userEmail;
-        this.createdAt = createdAt;
-    }
-
-    public Order() {
-    }
-
-    public Integer getId() {
-        return id;
-    }
-
-    public void setId(Integer id) {
-        this.id = id;
-    }
-
-    public Integer getProductId() {
-        return productId;
-    }
-
-    public void setProductId(Integer productId) {
-        this.productId = productId;
-    }
-
-    public String getUserEmail() {
-        return userEmail;
-    }
-
-    public void setUserEmail(String userEmail) {
-        this.userEmail = userEmail;
-    }
-
-    public LocalDateTime getCreatedAt() {
-        return createdAt;
-    }
-
-    public void setCreatedAt(LocalDateTime createdAt) {
         this.createdAt = createdAt;
     }
 }

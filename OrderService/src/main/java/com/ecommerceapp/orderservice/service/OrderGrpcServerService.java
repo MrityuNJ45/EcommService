@@ -9,7 +9,7 @@ import io.grpc.Status;
 import io.grpc.stub.StreamObserver;
 import net.devh.boot.grpc.server.service.GrpcService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.crossstore.ChangeSetPersister;
+
 
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
@@ -18,16 +18,14 @@ import java.util.List;
 import java.util.Optional;
 
 @GrpcService
-public class OrderServerService extends OrderServiceGrpc.OrderServiceImplBase {
+public class OrderGrpcServerService extends OrderServiceGrpc.OrderServiceImplBase {
 
     @Autowired
     private OrderRepository orderRepository;
+
     @Override
     public void createOrder(Order.CreateOrderRequest request, StreamObserver<Order.OrderResponse> responseObserver) {
-        com.ecommerceapp.orderservice.model.Order order = new com.ecommerceapp.orderservice.model.Order();
-        order.setProductId(request.getProductId());
-        order.setUserEmail(request.getUserEmail());
-        order.setCreatedAt(LocalDateTime.now());
+        com.ecommerceapp.orderservice.model.Order order = new com.ecommerceapp.orderservice.model.Order(request.getProductId(), request.getUserEmail(), LocalDateTime.now());
         com.ecommerceapp.orderservice.model.Order savedOrder = orderRepository.save(order);
 
         Timestamp orderTimeStamp = Timestamp.newBuilder()
@@ -39,8 +37,11 @@ public class OrderServerService extends OrderServiceGrpc.OrderServiceImplBase {
                 .setProductId(savedOrder.getProductId())
                 .setUserEmail(savedOrder.getUserEmail())
                 .setCreatedAt(orderTimeStamp).build();
+
+
         responseObserver.onNext(response);
         responseObserver.onCompleted();
+
     }
 
     @Override
