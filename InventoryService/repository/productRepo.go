@@ -15,7 +15,7 @@ type Database struct {
 
 func (d *Database)Connect() (error) {
 	var err error
-	dsn := "host=localhost user=mrityunjay.s_ftc dbname=morty port=5432 sslmode=disable"
+	dsn := "host=localhost user=username dbname=database password=dbpassword port=5432 sslmode=disable"
 	d.DB, err = gorm.Open(postgres.Open(dsn), &gorm.Config{})
 	
 	if err != nil {
