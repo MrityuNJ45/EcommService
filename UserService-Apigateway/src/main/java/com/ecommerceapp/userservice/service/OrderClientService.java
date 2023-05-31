@@ -6,6 +6,8 @@ import com.ecommerceapp.userservice.exceptions.ProductException;
 import com.ecommerceapp.userservice.models.OrderDTO;
 
 import com.ecommerceapp.userservice.models.Product;
+import io.grpc.Channel;
+import io.grpc.ManagedChannel;
 import net.devh.boot.grpc.client.inject.GrpcClient;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -21,7 +23,7 @@ public class OrderClientService {
 
 
     @GrpcClient("grpc-order-service")
-    OrderServiceGrpc.OrderServiceBlockingStub orderServiceBlockingStub;
+    private OrderServiceGrpc.OrderServiceBlockingStub orderServiceBlockingStub;
 
     @Autowired
     private ProductClientService productClientService;

@@ -33,14 +33,8 @@ public class CustomerServiceTest {
         Customer customer = new Customer();
         customer.setEmail("test@example.com");
         customer.setPassword("password");
-
-
         when(customerRepository.save(any(Customer.class))).thenReturn(customer);
-
-
         Customer createdCustomer = customerService.createCustomer(customer);
-
-
         verify(customerRepository, times(1)).save(customer);
         assertEquals(customer, createdCustomer);
     }
@@ -49,14 +43,10 @@ public class CustomerServiceTest {
     public void testGetCustomerByEmail() {
 
         String email = "test@example.com";
-
         Customer customer = new Customer();
         customer.setEmail(email);
-
         when(customerRepository.findByEmail(email)).thenReturn(Optional.of(customer));
-
         Customer retrievedCustomer = customerService.getCustomerByEmail(email);
-
         verify(customerRepository, times(1)).findByEmail(email);
         assertEquals(customer, retrievedCustomer);
     }

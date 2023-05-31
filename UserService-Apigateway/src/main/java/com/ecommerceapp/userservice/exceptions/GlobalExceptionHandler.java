@@ -12,10 +12,10 @@ import java.time.LocalDateTime;
 public class GlobalExceptionHandler {
 
     @ExceptionHandler(ProductException.class)
-    public ResponseEntity<ErrorDetails> myExpHandler(ProductException ie, WebRequest req){
+    public ResponseEntity<ErrorDetails> myExpHandler(ProductException pe, WebRequest req){
         ErrorDetails err = new ErrorDetails();
         err.setTimeStamp(LocalDateTime.now());
-        err.setMessage(ie.getMessage());
+        err.setMessage(pe.getMessage());
         err.setDescription(req.getDescription(false));
         return new ResponseEntity<ErrorDetails>(err, HttpStatus.BAD_REQUEST);
     }

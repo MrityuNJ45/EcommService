@@ -4,6 +4,8 @@ import com.ecommerceapp.userservice.exceptions.CustomerException;
 import com.ecommerceapp.userservice.models.Customer;
 import com.ecommerceapp.userservice.service.CustomerService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
@@ -17,7 +19,7 @@ public class CustomerController {
     @Autowired
     private PasswordEncoder passwordEncoder;
     @PostMapping("/create")
-    public Customer createCustomer(@RequestBody Customer customer) {
+    public ResponseEntity<Customer> createCustomer(@RequestBody Customer customer) {
         if(customer == null) {
             throw new CustomerException("Invalid customer provided");
         }
@@ -25,7 +27,8 @@ public class CustomerController {
         if(customer.getRole().toUpperCase().equals("ADMIN") || customer.getRole().toUpperCase().equals("USER")) {
             customer.setPassword(passwordEncoder.encode(customer.getPassword()));
             customer.setRole(customer.getRole().toUpperCase());
-            return customerService.createCustomer(customer);
+
+            return new ResponseEntity<>(customerService.createCustomer(customer), HttpStatus.CREATED);
         }
 
         throw new CustomerException("Invalid role provided");

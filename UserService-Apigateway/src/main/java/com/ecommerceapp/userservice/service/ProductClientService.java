@@ -1,14 +1,11 @@
 package com.ecommerceapp.userservice.service;
 
-import com.ecommerceapp.Order;
+
 import com.ecommerceapp.ProductOuterClass;
 import com.ecommerceapp.ProductServiceGrpc;
 import com.ecommerceapp.userservice.models.Product;
 import net.devh.boot.grpc.client.inject.GrpcClient;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-
-import javax.sound.sampled.Port;
 import java.util.ArrayList;
 import java.util.List;
 
