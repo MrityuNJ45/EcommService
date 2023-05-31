@@ -14,6 +14,9 @@ import org.springframework.boot.test.context.SpringBootTest;
 
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -34,7 +37,7 @@ public class OrderServerServiceTest {
 
     @Test
     public void createOrder_ValidRequest_ReturnsResponse() {
-        // Arrange
+
         Integer productId = 123;
         String userEmail = "test@example.com";
         LocalDateTime currentDateTime = LocalDateTime.now();
@@ -51,10 +54,10 @@ public class OrderServerServiceTest {
 
         StreamObserver<com.ecommerceapp.Order.OrderResponse> responseObserver = mock(StreamObserver.class);
 
-        // Act
+
         orderGrpcServerService.createOrder(request, responseObserver);
 
-        // Assert
+
         verify(orderRepository).save(orderCaptor.capture());
 
         com.ecommerceapp.orderservice.model.Order capturedOrder = orderCaptor.getValue();
@@ -82,7 +85,7 @@ public class OrderServerServiceTest {
 
     @Test
     public void getOrder_ExistingOrderId_ReturnsResponse() {
-        // Arrange
+
         int orderId = 123;
         int productId = 456;
         String userEmail = "test@example.com";
@@ -99,10 +102,10 @@ public class OrderServerServiceTest {
 
         StreamObserver<com.ecommerceapp.Order.OrderResponse> responseObserver = mock(StreamObserver.class);
 
-        // Act
+
         orderGrpcServerService.getOrder(request, responseObserver);
 
-        // Assert
+
         verify(orderRepository).findById(orderIdCaptor.capture());
         int capturedOrderId = orderIdCaptor.getValue();
         assertEquals(orderId, capturedOrderId);
@@ -120,6 +123,8 @@ public class OrderServerServiceTest {
     }
 
 
+    @Captor
+    private ArgumentCaptor<String> userEmailCaptor;
     @Test
     public void getOrder_NonExistingOrderId_ReturnsError() {
 
@@ -142,11 +147,164 @@ public class OrderServerServiceTest {
         assertEquals(orderId, capturedOrderId);
 
         verify(responseObserver).onError(argThat((StatusRuntimeException e) ->
-                e.getStatus().getCode() == Status.INVALID_ARGUMENT.getCode()));
+                e.getStatus().getCode() == Status.NOT_FOUND.getCode()));
+
+        verifyNoMoreInteractions(responseObserver);
+    }
+
+    @Test
+    public void getAllOrdersOfUser_NonExistingUserEmail_ReturnsNotFoundError() {
+
+        String userEmail = "test@example.com";
+
+        when(orderRepository.findByUserEmail(userEmail)).thenReturn(Collections.emptyList());
+
+        com.ecommerceapp.Order.GetAllOrdersOfUserRequest request = com.ecommerceapp.Order.GetAllOrdersOfUserRequest.newBuilder()
+                .setUserEmail(userEmail)
+                .build();
+
+        StreamObserver<com.ecommerceapp.Order.GetAllOrdersOfUserResponse> responseObserver = mock(StreamObserver.class);
+
+
+        orderGrpcServerService.getAllOrdersOfUser(request, responseObserver);
+
+
+        verify(orderRepository).findByUserEmail(userEmailCaptor.capture());
+        String capturedUserEmail = userEmailCaptor.getValue();
+        assertEquals(userEmail, capturedUserEmail);
+
+        verify(responseObserver).onError(argThat((StatusRuntimeException e) ->
+                e.getStatus().getCode() == Status.NOT_FOUND.getCode()));
+
+        verifyNoMoreInteractions(responseObserver);
+    }
+
+    @Test
+    public void getAllOrdersOfUser_ExistingUserEmail_ReturnsResponseWithOrders() {
+
+        String userEmail = "test@example.com";
+        List<com.ecommerceapp.orderservice.model.Order> orders = new ArrayList<>();
+        orders.add(new com.ecommerceapp.orderservice.model.Order(1,123, userEmail, LocalDateTime.now()));
+        orders.add(new com.ecommerceapp.orderservice.model.Order(2,456, userEmail, LocalDateTime.now()));
+
+        when(orderRepository.findByUserEmail(userEmail)).thenReturn(orders);
+
+        com.ecommerceapp.Order.GetAllOrdersOfUserRequest request = com.ecommerceapp.Order.GetAllOrdersOfUserRequest.newBuilder()
+                .setUserEmail(userEmail)
+                .build();
+
+        StreamObserver<com.ecommerceapp.Order.GetAllOrdersOfUserResponse> responseObserver = mock(StreamObserver.class);
+
+
+        orderGrpcServerService.getAllOrdersOfUser(request, responseObserver);
+
+
+        verify(orderRepository).findByUserEmail(userEmailCaptor.capture());
+        String capturedUserEmail = userEmailCaptor.getValue();
+        assertEquals(userEmail, capturedUserEmail);
+
+        ArgumentCaptor<com.ecommerceapp.Order.GetAllOrdersOfUserResponse> responseCaptor = ArgumentCaptor.forClass(com.ecommerceapp.Order.GetAllOrdersOfUserResponse.class);
+        verify(responseObserver).onNext(responseCaptor.capture());
+        verify(responseObserver).onCompleted();
+
+        com.ecommerceapp.Order.GetAllOrdersOfUserResponse response = responseCaptor.getValue();
+        assertNotNull(response);
+        assertEquals(orders.size(), response.getOrdersList().size());
+
+    }
+    @Test
+    public void getAllOrdersOfUser_ExceptionOccurs_ReturnsUnknownError() {
+
+        String userEmail = "test@example.com";
+
+        when(orderRepository.findByUserEmail(userEmail)).thenThrow(new RuntimeException("Some error occurred"));
+
+        com.ecommerceapp.Order.GetAllOrdersOfUserRequest request = com.ecommerceapp.Order.GetAllOrdersOfUserRequest.newBuilder()
+                .setUserEmail(userEmail)
+                .build();
+
+        StreamObserver<com.ecommerceapp.Order.GetAllOrdersOfUserResponse> responseObserver = mock(StreamObserver.class);
+
+
+        orderGrpcServerService.getAllOrdersOfUser(request, responseObserver);
+
+
+        verify(orderRepository).findByUserEmail(userEmailCaptor.capture());
+        String capturedUserEmail = userEmailCaptor.getValue();
+        assertEquals(userEmail, capturedUserEmail);
+
+        verify(responseObserver).onError(argThat((StatusRuntimeException e) ->
+                e.getStatus().getCode() == Status.INTERNAL.getCode()));
+
+        verifyNoMoreInteractions(responseObserver);
+    }
+
+    @Test
+    public void getAllOrders_ExistingOrders_ReturnsResponseWithOrders() {
+
+        List<Order> orders = new ArrayList<>();
+        orders.add(new Order(1,123, "user1@example.com", LocalDateTime.now()));
+        orders.add(new Order(2,456, "user2@example.com", LocalDateTime.now()));
+
+        when(orderRepository.findAll()).thenReturn(orders);
+
+        com.ecommerceapp.Order.GetAllOrdersRequest request = com.ecommerceapp.Order.GetAllOrdersRequest.newBuilder().build();
+
+        StreamObserver<com.ecommerceapp.Order.GetAllOrdersResponse> responseObserver = mock(StreamObserver.class);
+
+
+        orderGrpcServerService.getAllOrders(request, responseObserver);
+
+
+        verify(orderRepository).findAll();
+
+        ArgumentCaptor<com.ecommerceapp.Order.GetAllOrdersResponse> responseCaptor = ArgumentCaptor.forClass(com.ecommerceapp.Order.GetAllOrdersResponse.class);
+        verify(responseObserver).onNext(responseCaptor.capture());
+        verify(responseObserver).onCompleted();
+
+        com.ecommerceapp.Order.GetAllOrdersResponse response = responseCaptor.getValue();
+        assertNotNull(response);
+        assertEquals(orders.size(), response.getOrdersList().size());
+
+    }
+
+    @Test
+    public void getAllOrders_NoOrdersFound_ReturnsNotFoundError() {
+
+        when(orderRepository.findAll()).thenReturn(Collections.emptyList());
+
+        com.ecommerceapp.Order.GetAllOrdersRequest request = com.ecommerceapp.Order.GetAllOrdersRequest.newBuilder().build();
+
+        StreamObserver<com.ecommerceapp.Order.GetAllOrdersResponse> responseObserver = mock(StreamObserver.class);
+
+        orderGrpcServerService.getAllOrders(request, responseObserver);
+
+        verify(orderRepository).findAll();
+
+        verify(responseObserver).onError(argThat((StatusRuntimeException e) ->
+                e.getStatus().getCode() == Status.NOT_FOUND.getCode()));
 
         verifyNoMoreInteractions(responseObserver);
     }
 
 
+    @Test
+    public void getAllOrders_ExceptionOccurs_ReturnsUnknownError() {
+
+        when(orderRepository.findAll()).thenThrow(new RuntimeException("Some error occurred"));
+
+        com.ecommerceapp.Order.GetAllOrdersRequest request = com.ecommerceapp.Order.GetAllOrdersRequest.newBuilder().build();
+
+        StreamObserver<com.ecommerceapp.Order.GetAllOrdersResponse> responseObserver = mock(StreamObserver.class);
+
+        orderGrpcServerService.getAllOrders(request, responseObserver);
+
+        verify(orderRepository).findAll();
+
+        verify(responseObserver).onError(argThat((StatusRuntimeException e) ->
+                e.getStatus().getCode() == Status.INTERNAL.getCode()));
+
+        verifyNoMoreInteractions(responseObserver);
+    }
 
 }

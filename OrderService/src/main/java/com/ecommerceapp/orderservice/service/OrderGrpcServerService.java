@@ -77,7 +77,9 @@ public class OrderGrpcServerService extends OrderServiceGrpc.OrderServiceImplBas
             responseObserver.onCompleted();
         }
         catch (OrderException e) {
-            responseObserver.onError(Status.INVALID_ARGUMENT.withDescription(e.getMessage()).asRuntimeException());
+            responseObserver.onError(Status.NOT_FOUND.withDescription(e.getMessage()).asRuntimeException());
+        }catch (Exception e) {
+            responseObserver.onError(Status.INTERNAL.withDescription(e.getMessage()).asRuntimeException());
         }
     }
 
@@ -113,7 +115,7 @@ public class OrderGrpcServerService extends OrderServiceGrpc.OrderServiceImplBas
         } catch (OrderException orderException) {
             responseObserver.onError(Status.NOT_FOUND.withDescription(orderException.getMessage()).asRuntimeException());
         } catch (Exception e) {
-            responseObserver.onError(Status.UNKNOWN.withDescription(e.getMessage()).asRuntimeException());
+            responseObserver.onError(Status.INTERNAL.withDescription(e.getMessage()).asRuntimeException());
         }
 
     }
@@ -151,8 +153,12 @@ public class OrderGrpcServerService extends OrderServiceGrpc.OrderServiceImplBas
         } catch (OrderException orderException) {
             responseObserver.onError(Status.NOT_FOUND.withDescription(orderException.getMessage()).asRuntimeException());
         } catch (Exception e) {
-            responseObserver.onError(Status.UNKNOWN.withDescription(e.getMessage()).asRuntimeException());
+            responseObserver.onError(Status.INTERNAL.withDescription(e.getMessage()).asRuntimeException());
         }
 
     }
+
+
+
+
 }
